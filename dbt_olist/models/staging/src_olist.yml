@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: staging_customers
+    description: "Limpeza e padronização dos dados de clientes da Olist."
+    columns:
+      - name: id_cliente_pedido
+        description: "ID único do cliente para um pedido específico."
+        tests:
+          - unique
+          - not_null
+      - name: id_unico_cliente
+        description: "ID único que identifica o cliente de forma persistente entre vários pedidos."
+
+  - name: staging_orders
+    description: "Dados de cabeçalho dos pedidos, incluindo status e timestamps de processamento."
+    columns:
+      - name: id_pedido
+        description: "Chave primária do pedido."
+        tests:
+          - unique
+          - not_null
+      - name: status_pedido
+        description: "Status atual do pedido (ex: delivered, shipped, canceled)."
+        tests:
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'invoiced', 'processing', 'approved', 'unavailable', 'created']
+
+  - name: staging_order_items
+    description: "Detalhes dos itens contidos em cada pedido, incluindo preços e fretes."
+    columns:
+      - name: id_pedido
+        tests:
+          - not_null
+          - relationships:
+              to: ref('staging_orders')
+              field: id_pedido
+      - name: valor_item
+        description: "Preço unitário do produto."
+
+  - name: staging_payments
+    description: "Informações sobre as transações financeiras de cada pedido."
+    columns:
+      - name: metodo_pagamento
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+
+  - name: staging_products
+    description: "Catálogo de produtos com dimensões físicas e categorias."
+    columns:
+      - name: id_produto
+        tests:
+          - unique
+          - not_null
+      - name: categoria
+        description: "Nome da categoria do produto em português."
+
+  - name: staging_sellers
+    description: "Informações cadastrais dos vendedores da plataforma."
+    columns:
+      - name: id_vendedor
+        tests:
+          - unique
+          - not_null
