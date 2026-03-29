@@ -1,0 +1,15 @@
+dbt_olist:
+target: dev  
+outputs:
+    dev:
+      dataset: staging
+      job_execution_timeout_seconds: 100
+      job_retries: 1
+      keyfile: '"C:\Users\User\Documents\analytics-engineering-491022-5fb70bf9ec31.json"'
+      location: US
+      method: service-account
+      priority: interactive
+      project: analytics-engineering-491022
+      threads: 4
+      type: bigquery
+  
