@@ -1,0 +1,67 @@
+name: dbt CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  dbt:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: dbt_olist
+
+    env:
+      DBT_METHOD: ${{ vars.DBT_METHOD }}
+      DBT_PROJECT: ${{ vars.DBT_PROJECT }}
+      DBT_DATASET: ${{ vars.DBT_DATASET }}
+      DBT_LOCATION: ${{ vars.DBT_LOCATION }}
+      DBT_THREADS: ${{ vars.DBT_THREADS }}
+      DBT_PRIORITY: ${{ vars.DBT_PRIORITY }}
+      DBT_JOB_TIMEOUT: ${{ vars.DBT_JOB_TIMEOUT }}
+      DBT_JOB_RETRIES: ${{ vars.DBT_JOB_RETRIES }}
+      DBT_KEYFILE_PATH: /tmp/gcp-key.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Prepare GCP key
+        run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
+
+      - name: dbt deps
+        run: uv run dbt deps
+
+      - name: dbt debug
+        run: uv run dbt debug --profiles-dir .
+
+      - name: dbt run
+        run: uv run dbt run --profiles-dir .
+
+      - name: dbt test
+        run: uv run dbt test --profiles-dir .
+
+      - name: Upload dbt artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-artifacts
+          path: |
+            dbt_olist/target/manifest.json
+            dbt_olist/target/run_results.json

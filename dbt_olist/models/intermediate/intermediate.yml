@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: int_vendas_items_detailed
+    description: >
+      Intermediate model with order item details, enriched with seller and
+      product attributes for sales and logistics analysis.
+    columns:
+      - name: id_pedido
+        description: Unique order identifier.
+      - name: numero_item
+        description: Sequential item number within the order.
+      - name: id_produto
+        description: Identifier of the sold product.
+      - name: id_vendedor
+        description: Identifier of the seller responsible for the item.
+      - name: vendedor_cidade
+        description: Seller city.
+      - name: vendedor_uf
+        description: Seller state (UF).
+      - name: produto_categoria
+        description: Product category.
+      - name: peso_gramas
+        description: Product weight in grams.
+      - name: comprimento_cm
+        description: Product length in centimeters.
+      - name: altura_cm
+        description: Product height in centimeters.
+      - name: largura_cm
+        description: Product width in centimeters.
+      - name: valor_item
+        description: Item monetary value.
+      - name: valor_frete
+        description: Item freight monetary value.
+      - name: data_limite_envio
+        description: Shipping deadline date for the item.
+
+  - name: int_customers_order_history
+    description: >
+      Intermediate model with customer purchase history, containing the first
+      and latest recorded purchase dates.
+    columns:
+      - name: id_cliente_pedido
+        description: Customer identifier in the order context.
+      - name: data_primeira_compra
+        description: Date and time of the customer's first purchase.
+      - name: data_ultima_compra
+        description: Date and time of the customer's latest purchase.

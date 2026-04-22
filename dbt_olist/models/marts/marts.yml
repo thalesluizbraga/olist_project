@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: fct_montly_revenue
+    description: >
+      Mart model with monthly revenue metrics aggregated from order item data,
+      including gross revenue, freight, and net revenue.
+    columns:
+      - name: mes
+        description: Month reference date for the aggregated metrics.
+      - name: receita
+        description: Total gross revenue from item values in the month.
+      - name: frete
+        description: Total freight value in the month.
+      - name: receita_liquida
+        description: Net revenue calculated as gross revenue minus freight.
