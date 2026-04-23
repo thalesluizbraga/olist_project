@@ -6,7 +6,6 @@ dbt_olist:
       method: "{{ env_var('DBT_METHOD', '') | trim or 'service-account' }}"
       project: "{{ env_var('DBT_PROJECT') }}"
       schema: "{{ env_var('DBT_SCHEMA', '') | trim or env_var('DBT_DATASET', '') | trim }}"
-      dataset: "{{ env_var('DBT_DATASET', '') | trim or env_var('DBT_SCHEMA', '') | trim }}"
       location: "{{ env_var('DBT_LOCATION', '') | trim or 'US' }}"
       keyfile: "{{ env_var('DBT_KEYFILE_PATH', '') | trim or '/tmp/gcp-key.json' }}"
       threads: "{{ (env_var('DBT_THREADS', '') | trim or '4') | int }}"
