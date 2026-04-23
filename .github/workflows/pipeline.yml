@@ -11,11 +11,6 @@ jobs:
   dbt:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-        working-directory: dbt_olist
-
     env:
       DBT_METHOD: ${{ vars.DBT_METHOD }}
       DBT_PROJECT: ${{ vars.DBT_PROJECT }}
@@ -46,16 +41,16 @@ jobs:
         run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
 
       - name: dbt deps
-        run: uv run dbt deps
+        run: uv run dbt deps --project-dir dbt_olist --profiles-dir dbt_olist
 
       - name: dbt debug
-        run: uv run dbt debug --profiles-dir .
+        run: uv run dbt debug --project-dir dbt_olist --profiles-dir dbt_olist
 
       - name: dbt run
-        run: uv run dbt run --profiles-dir .
+        run: uv run dbt run --project-dir dbt_olist --profiles-dir dbt_olist
 
       - name: dbt test
-        run: uv run dbt test --profiles-dir .
+        run: uv run dbt test --project-dir dbt_olist --profiles-dir dbt_olist
 
       - name: Upload dbt artifacts
         if: always()
