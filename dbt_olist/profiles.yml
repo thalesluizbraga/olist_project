@@ -3,13 +3,13 @@ dbt_olist:
   outputs:
     dev:
       type: bigquery
-      method: "{{ env_var('DBT_METHOD') }}"
+      method: "{{ env_var('DBT_METHOD', 'service-account') }}"
       project: "{{ env_var('DBT_PROJECT') }}"
       dataset: "{{ env_var('DBT_DATASET') }}"
-      location: "{{ env_var('DBT_LOCATION') }}"
-      keyfile: "{{ env_var('DBT_KEYFILE_PATH') }}"
-      threads: "{{ env_var('DBT_THREADS') | int }}"
-      priority: "{{ env_var('DBT_PRIORITY') }}"
-      job_execution_timeout_seconds: "{{ env_var('DBT_JOB_TIMEOUT') | int }}"
-      job_retries: "{{ env_var('DBT_JOB_RETRIES') | int }}"
+      location: "{{ env_var('DBT_LOCATION', 'US') }}"
+      keyfile: "{{ env_var('DBT_KEYFILE_PATH', '/tmp/gcp-key.json') }}"
+      threads: "{{ env_var('DBT_THREADS', '4') | int }}"
+      priority: "{{ env_var('DBT_PRIORITY', 'interactive') }}"
+      job_execution_timeout_seconds: "{{ env_var('DBT_JOB_TIMEOUT', '300') | int }}"
+      job_retries: "{{ env_var('DBT_JOB_RETRIES', '1') | int }}"
       use_storage_api: false
