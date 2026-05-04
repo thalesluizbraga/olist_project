@@ -38,7 +38,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Prepare GCP key
-        run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
+        run: echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > /tmp/gcp-key.json
 
       - name: dbt deps
         run: uv run dbt deps --project-dir dbt_olist --profiles-dir dbt_olist
