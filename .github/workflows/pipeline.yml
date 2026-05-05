@@ -7,78 +7,56 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  DBT_METHOD: ${{ vars.DBT_METHOD }}
+  DBT_PROJECT: ${{ vars.DBT_PROJECT }}
+  DBT_DATASET: ${{ vars.DBT_DATASET }}
+  DBT_LOCATION: ${{ vars.DBT_LOCATION }}
+  DBT_THREADS: ${{ vars.DBT_THREADS }}
+  DBT_PRIORITY: ${{ vars.DBT_PRIORITY }}
+  DBT_JOB_TIMEOUT: ${{ vars.DBT_JOB_TIMEOUT }}
+  DBT_JOB_RETRIES: ${{ vars.DBT_JOB_RETRIES }}
+  DBT_KEYFILE_PATH: /tmp/gcp-key.json
+
 jobs:
   dbt:
     runs-on: ubuntu-latest
-
-    env:
-      DBT_METHOD: ${{ vars.DBT_METHOD }}
-      DBT_PROJECT: ${{ vars.DBT_PROJECT }}
-      DBT_DATASET: ${{ vars.DBT_DATASET }}
-      DBT_LOCATION: ${{ vars.DBT_LOCATION }}
-      DBT_THREADS: ${{ vars.DBT_THREADS }}
-      DBT_PRIORITY: ${{ vars.DBT_PRIORITY }}
-      DBT_JOB_TIMEOUT: ${{ vars.DBT_JOB_TIMEOUT }}
-      DBT_JOB_RETRIES: ${{ vars.DBT_JOB_RETRIES }}
-      DBT_KEYFILE_PATH: /tmp/gcp-key.json
-
+    
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.10'
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-
-      - name: Install dependencies
-        run: uv sync --frozen
-
-      - name: Validate required DBT env vars
-        shell: bash
+      - name: Authenticate to GCP
         run: |
-          set -euo pipefail
-          required_vars=(DBT_PROJECT DBT_DATASET DBT_LOCATION DBT_METHOD)
-          for name in "${required_vars[@]}"; do
-            value="${!name:-}"
-            if [ -z "$value" ]; then
-              echo "Missing required variable: $name"
-              exit 1
-            fi
-          done
+          echo "${{ secrets.GCP_SA_KEY }}" > $DBT_KEYFILE_PATH
 
-      - name: Prepare and validate GCP key
-        shell: bash
+      - name: Install dbt
         run: |
-          set -euo pipefail
-          if [ -z "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
-            echo "Missing required secret: GCP_SERVICE_ACCOUNT_KEY"
-            echo "If this is a pull_request from a fork, GitHub does not expose repository secrets by default."
-            exit 1
-          fi
-          printf '%s' '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
-          python -m json.tool /tmp/gcp-key.json > /dev/null
+          pip install --upgrade pip
+          pip install dbt-bigquery
 
-      - name: dbt deps
-        run: uv run dbt deps --project-dir dbt_olist --profiles-dir dbt_olist
+      - name: Install dbt Dependencies
+        run: dbt deps
 
-      - name: dbt debug
-        run: uv run dbt debug --project-dir dbt_olist --profiles-dir dbt_olist
+      - name: dbt Debug (Check Connection)
+        run: dbt debug
 
-      - name: dbt run
-        run: uv run dbt run --project-dir dbt_olist --profiles-dir dbt_olist
+      - name: Run CI (Pull Request)
+        if: github.event_name == 'pull_request'
+        run: |
+          dbt seed --target dev
+          dbt run --target dev
+          dbt test --target dev
 
-      - name: dbt test
-        run: uv run dbt test --project-dir dbt_olist --profiles-dir dbt_olist
-
-      - name: Upload dbt artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dbt-artifacts
-          path: |
-            dbt_olist/target/manifest.json
-            dbt_olist/target/run_results.json
+      - name: Run CD (Push to Main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          dbt seed --target prod
+          dbt run --target prod
+          dbt test --target prod
+          dbt docs generate --target prod
