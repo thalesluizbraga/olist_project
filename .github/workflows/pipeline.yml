@@ -74,14 +74,18 @@ jobs:
 
       - name: Authenticate to GCP
         if: ${{ steps.gcp_secret.outputs.has_secret == 'true' }}
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          BIGQUERY_SECRET_DBT_PROJECT_KEY: ${{ secrets.BIGQUERY_SECRET_DBT_PROJECT_KEY }}
         run: |
           set -euo pipefail
-          GCP_KEY="${{ secrets.GCP_SA_KEY }}"
+          GCP_KEY="${GCP_SA_KEY:-}"
           if [ -z "$GCP_KEY" ]; then
-            GCP_KEY="${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+            GCP_KEY="${GCP_SERVICE_ACCOUNT_KEY:-}"
           fi
           if [ -z "$GCP_KEY" ]; then
-            GCP_KEY="${{ secrets.BIGQUERY_SECRET_DBT_PROJECT_KEY }}"
+            GCP_KEY="${BIGQUERY_SECRET_DBT_PROJECT_KEY:-}"
           fi
           printf '%s' "$GCP_KEY" > "$DBT_KEYFILE_PATH"
           python -m json.tool "$DBT_KEYFILE_PATH" > /dev/null
