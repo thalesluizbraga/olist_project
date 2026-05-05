@@ -114,7 +114,7 @@ jobs:
       - name: Run CD (push to main)
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.gcp_secret.outputs.has_secret == 'true' }}
         run: |
-          dbt seed --profiles-dir . --target prod
-          dbt run --profiles-dir . --target prod
-          dbt test --profiles-dir . --target prod
-          dbt docs generate --profiles-dir . --target prod
+          dbt seed --profiles-dir . --target dev
+          dbt run --profiles-dir . --target dev
+          dbt test --profiles-dir . --target dev
+          dbt docs generate --profiles-dir . --target dev
