@@ -1,45 +1,88 @@
+name: dbt CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DBT_METHOD: ${{ vars.DBT_METHOD }}
+  DBT_PROJECT: ${{ vars.DBT_PROJECT }}
+  DBT_DATASET: ${{ vars.DBT_DATASET }}
+  DBT_LOCATION: ${{ vars.DBT_LOCATION }}
+  DBT_THREADS: ${{ vars.DBT_THREADS }}
+  DBT_PRIORITY: ${{ vars.DBT_PRIORITY }}
+  DBT_JOB_TIMEOUT: ${{ vars.DBT_JOB_TIMEOUT }}
+  DBT_JOB_RETRIES: ${{ vars.DBT_JOB_RETRIES }}
+  DBT_KEYFILE_PATH: /tmp/gcp-key.json
+
 jobs:
   dbt:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./dbt_olist  # O erro estava aqui: precisa de 2 espaços a mais que o 'run'
+        working-directory: ./dbt_olist
+        shell: bash
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
+      - name: Validate required DBT vars
+        run: |
+          set -euo pipefail
+          required_vars=(DBT_METHOD DBT_PROJECT DBT_DATASET DBT_LOCATION)
+          for name in "${required_vars[@]}"; do
+            value="${!name:-}"
+            if [ -z "$value" ]; then
+              echo "Missing required variable: $name"
+              exit 1
+            fi
+          done
 
       - name: Authenticate to GCP
-        # Aqui usamos o caminho absoluto para garantir que o dbt encontre o arquivo
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > /tmp/gcp-key.json
+          set -euo pipefail
+          GCP_KEY="${{ secrets.GCP_SA_KEY }}"
+          if [ -z "$GCP_KEY" ]; then
+            GCP_KEY="${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+          fi
+          if [ -z "$GCP_KEY" ]; then
+            echo "Missing required secret: GCP_SA_KEY (or GCP_SERVICE_ACCOUNT_KEY)"
+            echo "If this is a pull_request from a fork, repository secrets are not exposed by default."
+            exit 1
+          fi
+          printf '%s' "$GCP_KEY" > "$DBT_KEYFILE_PATH"
+          python -m json.tool "$DBT_KEYFILE_PATH" > /dev/null
 
       - name: Install dbt
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install dbt-bigquery
 
-      - name: Install dbt Dependencies
-        run: dbt deps
+      - name: Install dbt dependencies
+        run: dbt deps --profiles-dir .
 
-      - name: dbt Debug (Check Connection)
-        run: dbt debug
+      - name: dbt debug (check connection)
+        run: dbt debug --profiles-dir .
 
-      - name: Run CI (Pull Request)
+      - name: Run CI (pull request)
         if: github.event_name == 'pull_request'
         run: |
-          dbt seed --target dev
-          dbt run --target dev
-          dbt test --target dev
+          dbt seed --profiles-dir . --target dev
+          dbt run --profiles-dir . --target dev
+          dbt test --profiles-dir . --target dev
 
-      - name: Run CD (Push to Main)
+      - name: Run CD (push to main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          dbt seed --target prod
-          dbt run --target prod
-          dbt test --target prod
-          dbt docs generate --target prod
+          dbt seed --profiles-dir . --target prod
+          dbt run --profiles-dir . --target prod
+          dbt test --profiles-dir . --target prod
+          dbt docs generate --profiles-dir . --target prod
