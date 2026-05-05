@@ -21,7 +21,9 @@ env:
 jobs:
   dbt:
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+      working-directory: ./olist_project/dbt_olist
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Authenticate to GCP
         run: |
