@@ -29,7 +29,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -37,8 +37,25 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Prepare GCP key
-        run: echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" > /tmp/gcp-key.json
+      - name: Validate required DBT env vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_vars=(DBT_PROJECT DBT_DATASET DBT_LOCATION DBT_METHOD)
+          for name in "${required_vars[@]}"; do
+            value="${!name:-}"
+            if [ -z "$value" ]; then
+              echo "Missing required variable: $name"
+              exit 1
+            fi
+          done
+
+      - name: Prepare and validate GCP key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
+          python -m json.tool /tmp/gcp-key.json > /dev/null
 
       - name: dbt deps
         run: uv run dbt deps --project-dir dbt_olist --profiles-dir dbt_olist
