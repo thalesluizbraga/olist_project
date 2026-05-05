@@ -54,6 +54,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
+            echo "Missing required secret: GCP_SERVICE_ACCOUNT_KEY"
+            echo "If this is a pull_request from a fork, GitHub does not expose repository secrets by default."
+            exit 1
+          fi
           printf '%s' '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
           python -m json.tool /tmp/gcp-key.json > /dev/null
 
