@@ -46,41 +46,52 @@ jobs:
             fi
           done
 
+      - name: Fail fast on main without GCP secret
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY == '' && secrets.GCP_SERVICE_ACCOUNT_KEY == '' }}
+        run: |
+          echo "Missing required secret on main: GCP_SA_KEY (or GCP_SERVICE_ACCOUNT_KEY)"
+          exit 1
+
+      - name: Skip dbt on PR without GCP secret
+        if: ${{ github.event_name == 'pull_request' && secrets.GCP_SA_KEY == '' && secrets.GCP_SERVICE_ACCOUNT_KEY == '' }}
+        run: |
+          echo "No GCP secret available for this pull request."
+          echo "This is expected for PRs from forks. Skipping dbt execution."
+
       - name: Authenticate to GCP
+        if: ${{ secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '' }}
         run: |
           set -euo pipefail
           GCP_KEY="${{ secrets.GCP_SA_KEY }}"
           if [ -z "$GCP_KEY" ]; then
             GCP_KEY="${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
           fi
-          if [ -z "$GCP_KEY" ]; then
-            echo "Missing required secret: GCP_SA_KEY (or GCP_SERVICE_ACCOUNT_KEY)"
-            echo "If this is a pull_request from a fork, repository secrets are not exposed by default."
-            exit 1
-          fi
           printf '%s' "$GCP_KEY" > "$DBT_KEYFILE_PATH"
           python -m json.tool "$DBT_KEYFILE_PATH" > /dev/null
 
       - name: Install dbt
+        if: ${{ secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '' }}
         run: |
           python -m pip install --upgrade pip
           pip install dbt-bigquery
 
       - name: Install dbt dependencies
+        if: ${{ secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '' }}
         run: dbt deps --profiles-dir .
 
       - name: dbt debug (check connection)
+        if: ${{ secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '' }}
         run: dbt debug --profiles-dir .
 
       - name: Run CI (pull request)
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && (secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '') }}
         run: |
           dbt seed --profiles-dir . --target dev
           dbt run --profiles-dir . --target dev
           dbt test --profiles-dir . --target dev
 
       - name: Run CD (push to main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && (secrets.GCP_SA_KEY != '' || secrets.GCP_SERVICE_ACCOUNT_KEY != '') }}
         run: |
           dbt seed --profiles-dir . --target prod
           dbt run --profiles-dir . --target prod
