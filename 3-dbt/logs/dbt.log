@@ -1,0 +1,27 @@
+[0m15:06:42.438404 [debug] [MainThread]: Got an exception trying to initialize tracking
+
+
+============================== 15:06:42.701046 | 4bc8dc73-b49d-4d28-8c38-d00157857f13 ==============================
+[0m15:06:42.701046 [info ] [MainThread]: Running with dbt=1.11.11
+[0m15:06:42.702192 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'profiles_dir': 'C:\\Users\\User\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'invocation_command': 'dbt init', 'use_colors': 'True', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m15:06:51.214732 [debug] [MainThread]: Starter project path: C:\Users\User\Documents\repos\olist_project\.venv\Lib\site-packages\dbt\include\starter_project
+[0m15:06:51.254224 [info ] [MainThread]: 
+Your new dbt project "dbt_olist" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m15:06:51.255235 [info ] [MainThread]: Setting up your profile.
+[0m15:09:50.463978 [info ] [MainThread]: Profile dbt_olist written to C:\Users\User\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m15:09:50.465981 [debug] [MainThread]: Command `dbt init` succeeded at 15:09:50.465981 after 188.13 seconds
+[0m15:09:50.467529 [debug] [MainThread]: Flushing usage events

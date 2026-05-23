@@ -1,0 +1,14 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# tem as configs python que sao pesadas, entao tem que tirar
+.venv
+# tem as senhas do banco, entao tem que tirar
+.env
+# tem as credenciais do projeto dbt, entao tem que tirar
+profiles.yml 
