@@ -1,0 +1,33 @@
+name: 'dbt_olist' # nome do projeto
+version: '1.0.0' # versao do projeto
+config-version: 2 # versao do formato yaml
+
+
+profile: 'dbt_olist' # conecta com o arquivo profiles.yml e por isso tem que ser o mesmo nome que ta la 
+
+# caminhos da pastas
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"] # isso pelo SCD tipo 2 (cria colunas com data inicio e data fim para o estado do dado)
+
+# setups de limpeza do projeto
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  dbt_olist:
+    staging:
+      +schema: staging
+      +materialized: view
+
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+
+    marts:
+      +schema: mart
+      +materialized: table
