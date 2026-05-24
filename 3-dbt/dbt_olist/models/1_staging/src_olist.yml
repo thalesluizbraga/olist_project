@@ -1,0 +1,83 @@
+version: 2
+
+sources:
+  - name: olist
+    description: "Dados brutos Olist carregados via ETL no schema raw do Postgres."
+    schema: raw
+    tables:
+      - name: raw_customers
+        description: "Clientes (tb_customers.csv)."
+      - name: raw_orders
+        description: "Pedidos (tb_orders.csv)."
+      - name: raw_order_items
+        description: "Itens de pedido (tb_order_items.csv)."
+      - name: raw_order_payments
+        description: "Pagamentos (tb_order_payments.csv)."
+      - name: raw_olist_products_dataset
+        description: "Catálogo de produtos (olist_products_dataset.csv)."
+      - name: raw_sellers
+        description: "Vendedores (tb_sellers.csv)."
+
+models:
+  - name: staging_customers
+    description: "Cleaning and standardization of Olist customer data."
+    columns:
+      - name: id_cliente_pedido
+        description: "Unique customer ID for a specific order."
+        tests:
+          - unique
+          - not_null
+      - name: id_unico_cliente
+        description: "Unique ID that persistently identifies the customer across multiple orders."
+
+  - name: staging_orders
+    description: "Order header data, including status and processing timestamps."
+    columns:
+      - name: id_pedido
+        description: "Order primary key."
+        tests:
+          - unique
+          - not_null
+      - name: status_pedido
+        description: "Current order status (e.g., delivered, shipped, canceled)."
+        tests:
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'invoiced', 'processing', 'approved', 'unavailable', 'created']
+
+  - name: staging_order_items
+    description: "Details of items in each order, including prices and freight."
+    columns:
+      - name: id_pedido
+        tests:
+          - not_null
+          - relationships:
+              to: ref('staging_orders')
+              field: id_pedido
+      - name: valor_item
+        description: "Product unit price."
+
+  - name: staging_payments
+    description: "Information about financial transactions for each order."
+    columns:
+      - name: metodo_pagamento
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+
+  - name: staging_products
+    description: "Product catalog with physical dimensions and categories."
+    columns:
+      - name: id_produto
+        tests:
+          - unique
+          - not_null
+      - name: categoria
+        description: "Product category name in Portuguese."
+
+  - name: staging_sellers
+    description: "Registration information for platform sellers."
+    columns:
+      - name: id_vendedor
+        tests:
+          - unique
+          - not_null

@@ -7,5 +7,9 @@ requires-python = ">=3.12"
 dependencies = [
     "dbt-core>=1.11.11",
     "dbt-postgres>=1.10.0",
+    "dotenv>=0.9.9",
     "pandas>=3.0.3",
+    "psycopg2-binary>=2.9.12",
+    "python-dotenv>=1.0.0",
+    "sqlalchemy>=2.0.0",
 ]
