@@ -1,35 +1,27 @@
 """
-Ingestão única: CSVs (1-data/) → Postgres schema raw.
-
-Não faz parte da DAG Airflow — rode manualmente após subir o Postgres:
-  cd 2-local_setup && uv run python -m etl.load_raw
-
-Conexão: lê credenciais de .env (DBT_HOST=localhost, DBT_PORT=5433).
-Destino:  tabelas raw_* usadas como source() no dbt (src_olist.yml).
+Carrega CSVs de /usr/local/airflow/data para o Postgres (schema raw).
+Usado pela DAG do Airflow; credenciais via variáveis de ambiente ou .env local.
 """
 
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
 import pandas as pd
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 
-RAW_SCHEMA = "raw"  # mesmo schema declarado em 3-dbt/.../src_olist.yml
+RAW_SCHEMA = "raw"
 CHUNK_SIZE = 5_000
 
-SETUP_DIR = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = SETUP_DIR.parent
-DATA_DIR = PROJECT_ROOT / "1-data"  # ../1-data relativo a 2-local_setup
-ENV_FILE = SETUP_DIR / ".env"
+AIRFLOW_HOME = Path(os.environ.get("AIRFLOW_HOME", "/usr/local/airflow"))
+DATA_DIR = AIRFLOW_HOME / "data"
+ENV_FILE = AIRFLOW_HOME / ".env"
 
 
 def csv_to_table_name(csv_path: Path) -> str:
-    """tb_customers.csv → raw_customers (nome esperado pelo dbt source)."""
     stem = csv_path.stem
     if stem.startswith("tb_"):
         stem = stem[3:]
@@ -37,11 +29,12 @@ def csv_to_table_name(csv_path: Path) -> str:
 
 
 def build_engine() -> Engine:
-    load_dotenv(ENV_FILE)
+    if ENV_FILE.is_file():
+        load_dotenv(ENV_FILE)
 
     user = os.environ.get("DBT_USER", "postgres")
     password = os.environ.get("DBT_PASSWORD", "postgres")
-    host = os.environ.get("DBT_HOST", "localhost")  # localhost no host; host.docker.internal no Airflow
+    host = os.environ.get("DBT_HOST", "host.docker.internal")
     port = os.environ.get("DBT_PORT", "5433")
     database = os.environ.get("DBT_DATABASE", "dbt_db")
 
@@ -60,12 +53,18 @@ def load_csv(engine: Engine, csv_path: Path) -> tuple[str, int]:
     df.columns = [c.strip().lower() for c in df.columns]
 
     row_count = len(df)
-    # replace na 1ª ingestão; se rodar de novo com views dbt em cima, pode falhar — use com cuidado
+    inspector = inspect(engine)
+    table_exists = table_name in inspector.get_table_names(schema=RAW_SCHEMA)
+
+    if table_exists:
+        with engine.begin() as conn:
+            conn.execute(text(f"TRUNCATE TABLE {RAW_SCHEMA}.{table_name}"))
+
     df.to_sql(
         table_name,
         engine,
         schema=RAW_SCHEMA,
-        if_exists="replace",
+        if_exists="append" if table_exists else "replace",
         index=False,
         method="multi",
         chunksize=CHUNK_SIZE,
@@ -93,15 +92,3 @@ def run(data_dir: Path | None = None) -> None:
         print(f"  {csv_path.name} -> {RAW_SCHEMA}.{table_name} ({rows:,} linhas)")
 
     print("\nETL concluído.")
-
-
-def main() -> None:
-    try:
-        run()
-    except Exception as exc:
-        print(f"Erro: {exc}", file=sys.stderr)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

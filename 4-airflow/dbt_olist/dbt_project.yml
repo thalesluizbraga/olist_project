@@ -1,0 +1,26 @@
+
+# Cópia de 3-dbt/dbt_olist/dbt_project.yml — manter sincronizado ao alterar modelos
+name: 'dbt_olist'
+version: '1.0.0'
+
+profile: 'dbt_olist'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  dbt_olist:
+    1_staging:
+      +materialized: view
+    2_intermediate:
+      +materialized: view
+    3_marts:
+      +materialized: table

@@ -1,15 +1,24 @@
-Welcome to your new dbt project!
+# Projeto dbt Olist — transformações sobre schema `raw`.
 
-### Using the starter project
+Documentação completa: [docs/SETUP.md](../docs/SETUP.md)
 
-Try running the following commands:
-- dbt run
-- dbt test
+## Desenvolvimento local
 
+```bash
+cd 3-dbt/dbt_olist
+dbt debug
+dbt run
+dbt test
+```
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Camadas
+
+| Pasta | Materialização | Função |
+|-------|----------------|--------|
+| `models/1_staging/` | view | Limpeza de `raw.*` |
+| `models/2_intermediate/` | view | Joins e enriquecimento |
+| `models/3_marts/` | table | Dimensões e fatos para BI |
+
+## Sincronização com Airflow
+
+Ao alterar modelos aqui, copie para `4-airflow/dbt_olist/` (espelho usado pela DAG).

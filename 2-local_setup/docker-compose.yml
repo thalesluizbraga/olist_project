@@ -1,13 +1,15 @@
+# Postgres local para dbt + Power BI.
+# Porta 5433 no host evita conflito com o Postgres interno do Airflow (:5432).
 services:
   postgres:
     image: postgres:16
     container_name: dbt_postgres
     environment:
-      POSTGRES_USER: ${DBT_USER}
+      POSTGRES_USER: ${DBT_USER}       # definido em .env
       POSTGRES_PASSWORD: ${DBT_PASSWORD}
-      POSTGRES_DB: dbt_db
+      POSTGRES_DB: dbt_db              # mesmo DBT_DATABASE usado pelo dbt e load_raw.py
     ports:
-      - "5433:5432"
+      - "5433:5432"                    # host:5433 → usado por profiles.yml e airflow_settings.yaml
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:

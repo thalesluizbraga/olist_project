@@ -1,0 +1,15 @@
+# Template da connection usada pela DAG (dags/dag.py → conn_id="olist_postgres").
+# Copie para airflow_settings.yaml (gitignored):
+#   cp airflow_settings.yaml.example airflow_settings.yaml
+#
+# Aponta para o Postgres do 2-local_setup (porta 5433 no host Windows/Mac).
+
+airflow:
+  connections:
+    - conn_id: olist_postgres
+      conn_type: postgres
+      conn_host: host.docker.internal  # container Astro → Postgres no host
+      conn_port: 5433                  # mapeamento em 2-local_setup/docker-compose.yml
+      conn_login: postgres
+      conn_password: postgres
+      conn_schema: dbt_db             # database; modelos dbt vão para schema public

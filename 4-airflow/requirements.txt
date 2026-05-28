@@ -1,0 +1,4 @@
+# Astro Runtime: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
+
+# Integração dbt ↔ Airflow (DbtTaskGroup em dags/dag.py)
+astronomer-cosmos==1.14.0

@@ -1,0 +1,20 @@
+# Extensões do docker-compose gerado pelo Astro CLI.
+# Monta o projeto dbt local dentro do container para hot-reload (sem rebuild).
+
+x-airflow-common: &airflow-common
+  extra_hosts:
+    # Permite que containers acessem serviços no host (Postgres Olist em :5433)
+    - "host.docker.internal:host-gateway"
+  volumes:
+    # Espelha 4-airflow/dbt_olist → path usado em dags/dag.py (DBT_PROJECT_PATH)
+    - ./dbt_olist:/usr/local/airflow/dbt_olist:ro
+
+services:
+  scheduler:
+    <<: *airflow-common
+  dag-processor:
+    <<: *airflow-common
+  triggerer:
+    <<: *airflow-common
+  api-server:
+    <<: *airflow-common
